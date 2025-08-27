@@ -5,8 +5,11 @@ from collections import defaultdict
 import os
 
 # --- CONFIG ---
-import os
-API_KEY = os.getenv("REBRICKABLE_API_KEY")  
+API_KEY = os.getenv("REBRICKABLE_API_KEY") 
+
+if not API_KEY:
+    st.error("API key not found. Please set REBRICKABLE_API_KEY as an environment variable.")
+    st.stop()
 
 # --- Load category mapping from CSV ---
 category_df = pd.read_csv("part_categories.csv")
@@ -293,5 +296,6 @@ if set_info and not df.empty:
                 )
 
         st.markdown("<hr style='margin-top:0px; margin-bottom:0px;'>", unsafe_allow_html=True)
+
 
 
