@@ -3,9 +3,11 @@ import pandas as pd
 import requests
 from collections import defaultdict
 import os
+import base64
+import streamlit.components.v1 as components
 
 # --- CONFIG ---
-API_KEY = os.getenv("REBRICKABLE_API_KEY") 
+API_KEY = os.getenv("REBRICKABLE_API_KEY")
 
 if not API_KEY:
     st.error("API key not found. Please set REBRICKABLE_API_KEY as an environment variable.")
@@ -246,6 +248,34 @@ if set_info and not df.empty:
         st.session_state["color_filter"] = selected_colors
 
     # --- Display Grouped Table in Columns ---
+    
+    
+    def copy_to_clipboard(text, button_text="Copy"):
+        encoded_text = base64.b64encode(text.encode()).decode()
+        safe_button_text = button_text.replace('"', '&quot;').replace("'", '&#39;')
+        html = f"""
+        <style>
+        .copy-btn {{
+            font-size:12px;
+            width: 60px;
+            height: 40px
+            padding:0px 2px;
+            margin-bottom:0px;
+            border:2px solid #ccc;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }}
+        .copy-btn:hover {{
+            background-color:#e0e0e0;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }}
+        </style>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText(atob('{encoded_text}'))">
+            {safe_button_text}
+        </button>
+        """
+        components.html(html, height=40)
+
     for _, row in df.iterrows():
         # Use session_state values instead of old local variables
         if st.session_state.part_search and st.session_state.part_search.lower() not in row['part_name'].lower():
@@ -268,16 +298,24 @@ if set_info and not df.empty:
         if not variants:
             continue
 
-        # Render part header
-        st.markdown(
-            f"""
-            <div style='font-family:Quire Sans; font-size:22px; margin-top:0px; margin-bottom:10px'>
-            <b>{row['part_name']}</b>            
-            <small>(ID: <code>{row['part_num']}</code>, Category: <code>{row['category_name']}</code>)</small>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # --- Render part header in two columns ---
+        col1, col2 = st.columns([1, 18])  # Adjust the ratio as needed
+
+        with col1:
+            # --- Add Copy Part ID Button (JavaScript) ---
+            copy_to_clipboard(row['part_num'], "Copy ID")
+
+        with col2:
+            # Display the part name, part number, and category
+            st.markdown(
+                f"""
+                <div style='font-family:Quire Sans; font-size:22px; margin-top:0px; margin-bottom:10px'>
+                <b>{row['part_name']}</b><small> (ID: <code>{row['part_num']}</code>, Category: <code>{row['category_name']}</code>)</small>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
 
         # Render variants in columns
         cols = st.columns(len(variants), width=len(variants)*150)
