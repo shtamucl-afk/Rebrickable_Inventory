@@ -261,6 +261,7 @@ if set_info and not df.empty:
             height: 40px
             padding:0px 2px;
             margin-bottom:0px;
+            margin-top:0px
             border:2px solid #ccc;
             transition: all 0.2s ease;
             cursor: pointer;
@@ -274,8 +275,7 @@ if set_info and not df.empty:
             {safe_button_text}
         </button>
         """
-        components.html(html, height=40)
-
+        
     for _, row in df.iterrows():
         # Use session_state values instead of old local variables
         if st.session_state.part_search and st.session_state.part_search.lower() not in row['part_name'].lower():
@@ -298,24 +298,19 @@ if set_info and not df.empty:
         if not variants:
             continue
 
-        # --- Render part header in two columns ---
-        col1, col2 = st.columns([1, 18])  # Adjust the ratio as needed
-
-        with col1:
-            # --- Add Copy Part ID Button (JavaScript) ---
-            copy_to_clipboard(row['part_num'], "Copy ID")
-
-        with col2:
-            # Display the part name, part number, and category
-            st.markdown(
-                f"""
-                <div style='font-family:Quire Sans; font-size:22px; margin-top:0px; margin-bottom:10px'>
-                <b>{row['part_name']}</b><small> (ID: <code>{row['part_num']}</code>, Category: <code>{row['category_name']}</code>)</small>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
+             
+        # --- Add Copy Part ID Button (JavaScript) ---
+        Copy_ID_html = copy_to_clipboard(row['part_num'], "Copy ID")
+        components.html(
+            f"""
+            <div style='display: flex; align-items: center; gap: 6px; margin: 0px;'>
+                <button onclick=\"navigator.clipboard.writeText('{row['part_num']}')\" style='padding: 4px 8px;'>Copy ID</button>
+                <span style='font-weight: bold; font-size: 20px;'>{row['part_name']}</span>
+                <span style='color: gray;'>(ID: {row['part_num']}, Category: {row['category_name']})</span>
+            </div>
+            """,
+            height=52
+        )
 
         # Render variants in columns
         cols = st.columns(len(variants), width=len(variants)*150)
